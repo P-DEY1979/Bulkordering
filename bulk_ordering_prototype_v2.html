@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superdry SF — Bulk Ordering Prototype v2</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#E2E8F0;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px}
+:root{--hdr:#2D3748;--blue:#2B6CB0;--blue-light:#EBF8FF;--blue-hover:#2C5282;--green:#38A169;--green-light:#C6F6D5;--green-bg:#F0FFF4;--red:#E53E3E;--red-light:#FFF5F5;--red-border:#FED7D7;--bg:#F7FAFC;--card:#FFFFFF;--border:#E2E8F0;--text:#2D3748;--muted:#718096;--light:#EDF2F7;--amber:#D69E2E;--amber-light:#FEFCBF;--purple:#6B46C1;--purple-light:#FAF5FF}
+
+.phone-frame{width:390px;min-height:780px;background:var(--bg);border-radius:32px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.05);position:relative}
+.notch{width:120px;height:28px;background:#1A202C;border-radius:0 0 16px 16px;margin:0 auto;position:relative;z-index:10}
+.notch::after{content:'';width:8px;height:8px;border-radius:50%;background:#2D3748;border:2px solid #4A5568;position:absolute;right:20px;top:8px}
+
+.screen{display:none;min-height:700px;position:relative;animation:fadeIn 0.25s ease}
+.screen.active{display:flex;flex-direction:column}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes progressPulse{0%,100%{opacity:1}50%{opacity:0.6}}
+
+.sf-header{background:var(--hdr);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:15px;font-weight:600;flex-shrink:0}
+.sf-header .back-btn{cursor:pointer;opacity:0.9;transition:opacity 0.2s;display:flex;align-items:center}
+.sf-header .back-btn:hover{opacity:1}
+.sf-header .close-btn{margin-left:auto;cursor:pointer;opacity:0.9;transition:opacity 0.2s;display:flex}
+.sf-header .close-btn:hover{opacity:1}
+
+.sf-body{flex:1;padding:20px;overflow-y:auto}
+
+.sf-profile{display:flex;align-items:center;gap:14px;padding:16px 0 20px;border-bottom:1px solid var(--border)}
+.sf-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#BEE3F8,#90CDF4);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:17px;color:var(--blue);flex-shrink:0}
+.sf-pname{font-size:18px;font-weight:600;color:var(--text)}
+.sf-pdetail{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
+
+.sf-menu-item{display:flex;align-items:center;gap:14px;padding:17px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:15px;font-weight:500;color:var(--text);transition:all 0.15s}
+.sf-menu-item:hover{color:var(--blue)}
+.sf-menu-item svg{width:22px;height:22px;flex-shrink:0}
+.sf-menu-item.highlight{color:var(--blue);background:var(--blue-light);margin:0 -20px;padding:17px 20px;border-radius:0;position:relative}
+.sf-menu-item.highlight::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--blue);border-radius:0 2px 2px 0}
+.sf-menu-new{font-size:10px;font-weight:600;color:#fff;background:var(--blue);padding:2px 7px;border-radius:10px;margin-left:auto}
+
+.sf-footer{padding:14px 20px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px 16px;flex-shrink:0}
+.sf-footer .ver{font-size:11px;color:#A0AEC0;width:100%;margin-top:2px}
+
+.brand-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-light);color:var(--blue);font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;margin-bottom:4px}
+.brand-badge::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.merchant-id{font-size:11px;color:var(--muted);margin-bottom:16px}
+
+.step-section{animation:slideUp 0.3s ease;margin-bottom:4px}
+.step-label{font-size:11px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.step-label.done{color:var(--green)}
+.step-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px}
+.step-desc{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+
+.season-dd{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--text);background:var(--card);appearance:auto;cursor:pointer;transition:border-color 0.2s}
+.season-dd:focus{outline:none;border-color:var(--blue)}
+.season-dd.selected{border-color:var(--green)}
+
+.sku-summary{font-size:13px;color:var(--blue);font-weight:500;padding:10px 14px;background:var(--blue-light);border-radius:8px;margin:12px 0 16px;line-height:1.4}
+
+.btn-primary{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary:hover:not(:disabled){background:var(--blue-hover);transform:translateY(-1px);box-shadow:0 4px 12px rgba(43,108,176,0.3)}
+.btn-primary:active:not(:disabled){transform:scale(0.98)}
+.btn-primary:disabled{opacity:0.35;cursor:default}
+.btn-primary.green{background:var(--green)}
+.btn-primary.green:hover:not(:disabled){background:#2F855A}
+
+.btn-secondary{width:100%;padding:14px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;transition:all 0.15s;margin-top:10px}
+.btn-secondary:hover:not(:disabled){background:var(--light)}
+
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.2s}
+.upload-zone:hover{border-color:var(--blue);background:rgba(43,108,176,0.03)}
+.upload-zone .uz-icon{font-size:32px;color:var(--blue);margin-bottom:8px}
+.upload-zone .uz-text{font-size:14px;font-weight:500;color:var(--text)}
+.upload-zone .uz-hint{font-size:12px;color:var(--muted);margin-top:4px}
+
+.file-info{display:flex;align-items:center;gap:12px;padding:14px;background:var(--light);border-radius:10px;margin:14px 0}
+.file-info .fi-icon{width:40px;height:40px;background:var(--green-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.file-info .fi-name{font-size:13px;font-weight:600;color:var(--text)}
+.file-info .fi-size{font-size:11px;color:var(--muted);margin-top:2px}
+
+.progress-bar{height:5px;background:var(--light);border-radius:3px;margin:8px 0 12px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),#4299E1);border-radius:3px;transition:width 0.6s ease;width:0}
+
+.processing-msg{font-size:12px;color:var(--muted);text-align:center;animation:progressPulse 1.5s infinite}
+
+.success-box{text-align:center;padding:40px 16px}
+.success-icon{width:64px;height:64px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:30px;color:var(--green)}
+.success-title{font-size:20px;font-weight:600;color:var(--text);margin-bottom:8px}
+.success-sub{font-size:14px;color:var(--muted);margin-bottom:28px;line-height:1.5}
+
+.error-box{background:var(--red-light);border:1px solid var(--red-border);border-radius:10px;padding:14px;margin:16px 0;font-size:13px;color:var(--red);line-height:1.5;text-align:left}
+.error-box.amber{background:var(--amber-light);border-color:#ECC94B;color:#744210}
+
+.toast{position:absolute;bottom:16px;left:20px;right:20px;background:var(--hdr);color:#fff;padding:14px 18px;border-radius:10px;font-size:13px;font-weight:500;text-align:center;display:none;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,0.2);animation:slideUp 0.3s ease}
+
+.info-banner{font-size:12px;color:var(--blue);background:var(--blue-light);border-radius:8px;padding:10px 12px;margin:8px 0;line-height:1.5}
+.info-banner strong{font-weight:600}
+
+.template-preview{background:var(--light);border-radius:8px;padding:12px;margin:12px 0;overflow-x:auto}
+.template-preview table{font-size:10px;border-collapse:collapse;width:100%;white-space:nowrap}
+.template-preview th{background:var(--hdr);color:#fff;padding:5px 8px;font-weight:600;text-align:left}
+.template-preview td{padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+.template-preview td.editable{background:#FEFCBF;font-weight:600;color:var(--amber)}
+.template-preview td.locked{color:var(--muted)}
+
+.screen-label{text-align:center;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;padding:8px 0 4px;background:var(--light);border-bottom:1px solid var(--border)}
+
+.step-done{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--green-bg);border-radius:8px;margin-bottom:8px}
+.step-done .check{width:22px;height:22px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
+.step-done .sd-text{font-size:13px;font-weight:500;color:var(--green)}
+
+.independent-note{font-size:11px;color:var(--purple);background:var(--purple-light);border-radius:6px;padding:8px 12px;margin:8px 0;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="notch"></div>
+
+  <!-- SCREEN 1: Account Menu -->
+  <div id="screen-menu" class="screen active">
+    <div class="screen-label">Account menu</div>
+    <div class="sf-header">
+      <span>Menu</span>
+      <span class="close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></span>
+    </div>
+    <div class="sf-body">
+      <div class="sf-profile">
+        <div class="sf-avatar">VJ</div>
+        <div>
+          <div class="sf-pname">Vikash Jain</div>
+          <div class="sf-pdetail">sunriseuniforms@gmail.com<br>+91-93419-55558</div>
+        </div>
+      </div>
+      <div class="sf-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="#2B6CB0" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><circle cx="7" cy="15" r="1"/></svg>Retailers Order</div>
+      <div class="sf-menu-item highlight" onclick="goTo('bulk')"><svg viewBox="0 0 24 24" fill="none" stroke="#2B6CB0" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>Bulk Ordering<span class="sf-menu-new">NEW</span></div>
+      <div class="sf-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="#2B6CB0" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M14 9l3 3-3 3"/></svg>Orders &amp; Returns</div>
+      <div class="sf-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="#2B6CB0" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><circle cx="12" cy="8" r="0.5" fill="#2B6CB0"/></svg>Need Help</div>
+    </div>
+    <div class="sf-footer"><span>Policies</span><span>Terms &amp; Conditions</span><span class="ver">version 00.00.01</span></div>
+  </div>
+
+  <!-- SCREEN 2: Bulk Ordering - Main Screen -->
+  <div id="screen-bulk" class="screen">
+    <div class="screen-label">Bulk ordering — all three steps</div>
+    <div class="sf-header">
+      <span class="back-btn" onclick="goTo('menu')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body" style="padding-bottom:20px">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+
+      <!-- Step 1: Season -->
+      <div class="step-section">
+        <div class="step-label">Step 1 — Select season</div>
+        <div class="step-desc">Choose a season to download the product catalogue</div>
+        <select class="season-dd" id="seasonDd" onchange="onSeasonChange()">
+          <option value="">Select a season...</option>
+          <option value="AW2026">AW2026</option>
+        </select>
+        <div id="skuSummary" style="display:none" class="sku-summary"></div>
+      </div>
+
+      <!-- Step 2: Download -->
+      <div class="divider"></div>
+      <div class="step-section" id="downloadSection">
+        <div class="step-label">Step 2 — Download catalogue</div>
+        <div class="step-desc">Download the pre-filled template. Fill Qty Required column offline.</div>
+        <button class="btn-primary" id="btnDownload" disabled onclick="downloadCat()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Download Catalogue
+        </button>
+        <div class="info-banner" style="margin-top:10px"><strong>No PTD in template</strong> — pricing is resolved by the system during upload and shown in Cart.</div>
+      </div>
+
+      <!-- Step 3: Upload (Always Active) -->
+      <div class="divider"></div>
+      <div class="step-section">
+        <div class="step-label">Step 3 — Upload file</div>
+        <div class="step-desc">Upload your file with Qty Required filled. Always available — independent of download.</div>
+        <div class="independent-note">Upload is independent of Steps 1 &amp; 2. You can upload a previously prepared file at any time.</div>
+        <div class="upload-zone" onclick="goTo('uploading')">
+          <div class="uz-icon">&#8682;</div>
+          <div class="uz-text">Tap to choose file</div>
+          <div class="uz-hint">.xlsx files only &middot; Max 1,000 SKUs &middot; Single brand &middot; Multi-season OK</div>
+        </div>
+      </div>
+    </div>
+    <div id="toast-dl" class="toast"></div>
+  </div>
+
+  <!-- SCREEN 3: Season selected + downloaded -->
+  <div id="screen-downloaded" class="screen">
+    <div class="screen-label">After download — ready to upload or download more</div>
+    <div class="sf-header">
+      <span class="back-btn" onclick="goTo('bulk')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body" style="padding-bottom:20px">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+
+      <!-- Step 1: Can reselect -->
+      <div class="step-section">
+        <div class="step-done"><div class="check">&#10003;</div><div class="sd-text">AW2026 selected — 8,258 SKUs</div></div>
+        <div class="step-label">Step 1 — Select season</div>
+        <div class="step-desc">Switch season to download another catalogue</div>
+        <select class="season-dd selected">
+          <option>AW2026</option>
+        </select>
+      </div>
+
+      <!-- Step 2: Downloaded -->
+      <div class="divider"></div>
+      <div class="step-section">
+        <div class="step-done"><div class="check">&#10003;</div><div class="sd-text">Catalogue downloaded</div></div>
+        <div class="file-info">
+          <div class="fi-icon">&#128196;</div>
+          <div>
+            <div class="fi-name">Superdry_AW2026_Catalogue.xlsx</div>
+            <div class="fi-size">8,258 SKUs &middot; No PTD column &middot; Fill Qty Required offline</div>
+          </div>
+        </div>
+        <div class="template-preview">
+          <table>
+            <tr><th>Merchant ID</th><th>Brand</th><th>Category</th><th>Style ID</th><th>SKU</th><th>Size</th><th>Season</th><th>MRP</th><th>Qty Req</th></tr>
+            <tr><td class="locked">MER-SD-1042</td><td class="locked">Superdry</td><td class="locked">BELT</td><td class="locked">SD/AMA...</td><td class="locked">SD/AMA..._S</td><td class="locked">S</td><td class="locked">AW2026</td><td class="locked">3,599</td><td class="editable">?</td></tr>
+            <tr><td class="locked">MER-SD-1042</td><td class="locked">Superdry</td><td class="locked">BELT</td><td class="locked">SD/AMA...</td><td class="locked">SD/AMA..._M</td><td class="locked">M</td><td class="locked">AW2026</td><td class="locked">3,599</td><td class="editable">?</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Step 3: Upload (Always Active) -->
+      <div class="divider"></div>
+      <div class="step-section">
+        <div class="step-label">Step 3 — Upload file</div>
+        <div class="step-desc">Upload your filled file. Multi-season files accepted.</div>
+        <div class="upload-zone" onclick="goTo('uploading')">
+          <div class="uz-icon">&#8682;</div>
+          <div class="uz-text">Tap to choose file</div>
+          <div class="uz-hint">.xlsx &middot; Max 1,000 SKUs &middot; All 11 columns required &middot; Single brand only</div>
+        </div>
+      </div>
+    </div>
+    <div class="toast" style="display:block">&#10003; Catalogue downloaded successfully</div>
+  </div>
+
+  <!-- SCREEN 4: Uploading / Processing -->
+  <div id="screen-uploading" class="screen">
+    <div class="screen-label">Processing upload</div>
+    <div class="sf-header">
+      <span class="back-btn" style="opacity:0.3;pointer-events:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+
+      <div class="step-section">
+        <div class="step-label">Uploading &amp; validating</div>
+        <div class="file-info">
+          <div class="fi-icon" style="background:var(--blue-light)">&#128196;</div>
+          <div>
+            <div class="fi-name">Denim_and_Jackets_Order.xlsx</div>
+            <div class="fi-size">842 KB &middot; 650 SKUs</div>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="uploadProgress"></div></div>
+        <div class="processing-msg" id="processingText">Validating file structure...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: Success -->
+  <div id="screen-success" class="screen">
+    <div class="screen-label">Upload successful</div>
+    <div class="sf-header">
+      <span class="back-btn" onclick="goTo('bulk')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+      <div class="success-box">
+        <div class="success-icon">&#10003;</div>
+        <div class="success-title">Products added to cart</div>
+        <div class="success-sub">650 items (38,400 total qty) added to your cart<br><span style="font-size:12px;color:var(--muted)">PTD resolved &middot; 2 seasons (AW2026, SS2026)</span></div>
+        <button class="btn-primary green" onclick="goTo('menu')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          Go To Cart
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: Error - Merchant ID mismatch -->
+  <div id="screen-error-merchant" class="screen">
+    <div class="screen-label">Error — identity mismatch</div>
+    <div class="sf-header">
+      <span class="back-btn" onclick="goTo('bulk')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+      <div style="text-align:center;padding:32px 16px">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--red);border:2px solid var(--red-border)">&#10007;</div>
+        <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">Upload failed</div>
+        <div class="error-box">The uploaded file does not belong to this account. Please verify you are uploading the correct file for the logged-in buyer.</div>
+        <button class="btn-primary" style="margin-top:20px" onclick="goTo('bulk')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 105.64-8.36L1 10"/></svg>
+          Try Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 7: Error - Cart not empty -->
+  <div id="screen-error-cart" class="screen">
+    <div class="screen-label">Error — cart not empty</div>
+    <div class="sf-header">
+      <span class="back-btn" onclick="goTo('bulk')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+      <div style="text-align:center;padding:32px 16px">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--red);border:2px solid var(--red-border)">&#128722;</div>
+        <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">Upload failed</div>
+        <div class="error-box">Your cart already has items. Please complete or clear your current order before uploading a new file.</div>
+        <button class="btn-primary" style="margin-top:20px" onclick="goTo('menu')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          Go To Cart
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 8: Error - Too many SKUs -->
+  <div id="screen-error-sku" class="screen">
+    <div class="screen-label">Error — SKU limit exceeded</div>
+    <div class="sf-header">
+      <span class="back-btn" onclick="goTo('bulk')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+      <div style="text-align:center;padding:32px 16px">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--amber-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--amber);border:2px solid #ECC94B">!</div>
+        <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">Validation failed</div>
+        <div class="error-box amber">Maximum 1000 SKU Allowed In A Single File</div>
+        <button class="btn-primary" style="margin-top:20px" onclick="goTo('bulk')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 105.64-8.36L1 10"/></svg>
+          Try Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 9: Error - Zero/blank qty -->
+  <div id="screen-error-qty" class="screen">
+    <div class="screen-label">Error — invalid quantities</div>
+    <div class="sf-header">
+      <span class="back-btn" onclick="goTo('bulk')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+      <div style="text-align:center;padding:32px 16px">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--red);border:2px solid var(--red-border)">!</div>
+        <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">Validation failed</div>
+        <div class="error-box">Qty Required cannot be zero or blank. Please fill valid quantities for all SKUs in the file.</div>
+        <button class="btn-primary" style="margin-top:20px" onclick="goTo('bulk')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 105.64-8.36L1 10"/></svg>
+          Try Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 10: Error - Multi brand -->
+  <div id="screen-error-brand" class="screen">
+    <div class="screen-label">Error — multiple brands</div>
+    <div class="sf-header">
+      <span class="back-btn" onclick="goTo('bulk')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></span>
+      Bulk Ordering
+    </div>
+    <div class="sf-body">
+      <div class="brand-badge">Superdry</div>
+      <div class="merchant-id">Merchant ID: MER-SD-1042</div>
+      <div style="text-align:center;padding:32px 16px">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--red);border:2px solid var(--red-border)">&#10007;</div>
+        <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">Upload failed</div>
+        <div class="error-box">Multiple brands detected in file. Each upload file must contain items from a single brand only.</div>
+        <button class="btn-primary" style="margin-top:20px" onclick="goTo('bulk')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 105.64-8.36L1 10"/></svg>
+          Try Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation Panel -->
+<div style="max-width:390px;margin:16px auto 0;text-align:center">
+  <p style="font-size:13px;font-weight:600;color:#4A5568;margin-bottom:12px">Quick navigation</p>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+      <p style="width:100%;font-size:11px;color:#718096;font-weight:600;margin-bottom:2px">Happy path</p>
+      <button onclick="goTo('menu')" class="nav-btn">1. Menu</button>
+      <button onclick="goTo('bulk')" class="nav-btn">2. Bulk ordering</button>
+      <button onclick="goTo('downloaded')" class="nav-btn">3. Downloaded</button>
+      <button onclick="goTo('uploading')" class="nav-btn">4. Processing</button>
+      <button onclick="goTo('success')" class="nav-btn">5. Success</button>
+    </div>
+    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+      <p style="width:100%;font-size:11px;color:#718096;font-weight:600;margin-bottom:2px">Error states</p>
+      <button onclick="goTo('error-merchant')" class="nav-btn err">Merchant ID</button>
+      <button onclick="goTo('error-cart')" class="nav-btn err">Cart not empty</button>
+      <button onclick="goTo('error-sku')" class="nav-btn err">SKU limit</button>
+      <button onclick="goTo('error-qty')" class="nav-btn err">Zero qty</button>
+      <button onclick="goTo('error-brand')" class="nav-btn err">Multi brand</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.nav-btn{padding:7px 14px;border:1px solid #CBD5E0;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;font-family:inherit;color:#4A5568;font-weight:500;transition:all 0.15s}
+.nav-btn:hover{background:#EDF2F7;border-color:#A0AEC0}
+.nav-btn.err{color:#E53E3E;border-color:#FED7D7}
+.nav-btn.err:hover{background:#FFF5F5}
+</style>
+
+<script>
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + id);
+  if (target) target.classList.add('active');
+
+  if (id === 'uploading') {
+    const bar = document.getElementById('uploadProgress');
+    const msg = document.getElementById('processingText');
+    bar.style.width = '0';
+    msg.textContent = 'Validating file structure...';
+    setTimeout(() => { bar.style.width = '20%'; msg.textContent = 'Checking Merchant ID & Brand...'; }, 400);
+    setTimeout(() => { bar.style.width = '40%'; msg.textContent = 'Validating 650 SKUs...'; }, 1200);
+    setTimeout(() => { bar.style.width = '60%'; msg.textContent = 'Resolving PTD for each SKU...'; }, 2000);
+    setTimeout(() => { bar.style.width = '80%'; msg.textContent = 'Adding products to cart...'; }, 2800);
+    setTimeout(() => { bar.style.width = '100%'; msg.textContent = 'Almost done...'; }, 3400);
+    setTimeout(() => goTo('success'), 4000);
+  }
+}
+
+function onSeasonChange() {
+  const v = document.getElementById('seasonDd').value;
+  const sum = document.getElementById('skuSummary');
+  const btn = document.getElementById('btnDownload');
+  if (v) {
+    sum.style.display = 'block';
+    sum.textContent = 'AW2026 \u2014 8,258 SKUs available across 22 categories';
+    btn.disabled = false;
+  } else {
+    sum.style.display = 'none';
+    btn.disabled = true;
+  }
+}
+
+function downloadCat() {
+  goTo('downloaded');
+}
+</script>
+
+</body>
+</html>
